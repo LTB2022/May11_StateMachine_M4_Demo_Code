@@ -54,7 +54,7 @@ if True:   # change to True if you want to write the time!
 # Note this code is in a loop and will continue to use this statement
     #                     year, mon, date, hour, min, sec, wday, yday, isdst
     #   t is a time object
-    t = time.struct_time((2022,  04,   05,   12,  12,  0,    0,   -1,    -1))
+    t = time.struct_time((2022,  04,   05,   15,  43,  0,    0,   -1,    -1))
 
     #print("Setting time to:", t)     # uncomment for debugging
     rtc.datetime = t
@@ -451,7 +451,7 @@ class Record(State):
             delta_sec = self.sec_out - self.sec_in # Calculate sec difference
             f.write("%d:%02d:%02d, " % (delta_hour, delta_min, delta_sec))  # Write the change in time to the file
             f.write("Speech to text voice note\r\n")
-            f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, can't really sum items separated by ":"
+            f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
             led.value = False  # turn off LED to indicate we're done
 
         # Read out all lines in the .csv file to verify the last entry
