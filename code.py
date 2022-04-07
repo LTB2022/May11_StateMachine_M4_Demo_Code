@@ -1,4 +1,4 @@
-# State Classes rev 2
+# State Classes rev 3
 # rev 1 contains code state machine, RTC and SD card wrtiting
 
 # pylint: disable=global-statement,stop-iteration-return,no-self-use,useless-super-delegation
@@ -54,7 +54,7 @@ if True:   # change to True if you want to write the time!
 # Note this code is in a loop and will continue to use this statement
     #                     year, mon, date, hour, min, sec, wday, yday, isdst
     #   t is a time object
-    t = time.struct_time((2022,  04,   05,   15,  43,  0,    0,   -1,    -1))
+    t = time.struct_time((2022,  04,   07,   11,  22,  0,    0,   -1,    -1))
 
     #print("Setting time to:", t)     # uncomment for debugging
     rtc.datetime = t
@@ -101,24 +101,6 @@ print("Logging column names into the filesystem")
 #NOTE THIS MAY NOT BE NEEDED, THESE VARIABLES ARE ONLY AVAILABLE TO THE LOOP, WHICH
 #IS LOCATED OUTSIDE OF MACHINE STATES
 
-# Variables for time stamps
-# "date in" stamp
-"""documentation version of "commenting out" """
-""" global_month_in = month_in
-global_day_in = day_in
-global_year_in = year_in
-# "time in" stamp
-global_hour_in = hour_in
-global_min_in = min_in
-global_sec_in = sec_in
-# "date out" stamp
-global_month_out = month_out
-global_day_out = day_out
-global_year_out = year_out
-# "time out" stamp
-global_hour_out = hour_out
-global_min_out = min_out
-global_sec_out = sec_out """
 
 
 
@@ -170,8 +152,11 @@ class StateMachine(object):
 
 class State(object):
 
+
     def __init__(self):         # Constructor. Sets variables for the class, in this instance only, "self". Note machine variable below in the "enter" attribute
+        # Variables for time stamps
         #Initialization of global variables which are inherited by child states in the following code
+        
         self.month_in = 0
         self.day_in = 0
         self.year_in = 0
@@ -185,6 +170,8 @@ class State(object):
         self.hour_out = 0
         self.min_out = 0
         self.sec_out = 0
+
+
 
     @property
     def name(self):             # Attribute. Only the name is returned in states below. The State object shouldn't be called and returns nothing
@@ -233,6 +220,7 @@ class Profile1(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -262,6 +250,7 @@ class Tracking1(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -280,21 +269,27 @@ class Tracking1(State):
         t = rtc.datetime
 
         # Components of the "time in" stamp
-        self.month_in = t.tm_mon
-        self.day_in = t.tm_mday
-        self.year_in = t.tm_year
+        self.State.month_in = t.tm_mon
+        self.State.day_in = t.tm_mday
+        self.State.year_in = t.tm_year
 
         # Components of the "time in" stamp
-        self.hour_in = t.tm_hour
-        self.min_in = t.tm_min
-        self.sec_in = t.tm_sec
-        print('Date in: ' + str(self.month_in) + '/' + str(self.day_in) + '/' + str(self.year_in) + '\n')
-        print('Time in: ' + str(self.hour_in) + ':' + str(self.min_in) + ':' + str(self.sec_in) + '\n')
+        self.State.hour_in = t.tm_hour
+        self.State.min_in = t.tm_min
+        self.State.sec_in = t.tm_sec
+
+        print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in) + '\n')
+        print('Time in: ' + str(self.State.hour_in) + ':' + str(self.State.min_in) + ':' + str(self.State.sec_in) + '\n')
+
 
 
     def exit(self, machine):
         State.exit(self, machine)
         # Experiment clearing the Epaper Screen in this 'exit' attribute
+
+        #Check that the variable values remain
+        print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in) + '\n')
+        print('Time in: ' + str(self.State.hour_in) + ':' + str(self.State.min_in) + ':' + str(self.State.sec_in) + '\n')
 
     def pressed(self, machine):
         if switch_1.fell:                                         #Insert a switch #2 case, pull high or low to disable
@@ -307,6 +302,7 @@ class FocusTimer1(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -339,6 +335,7 @@ class Profile2(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -368,6 +365,7 @@ class VoiceNote(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -385,20 +383,25 @@ class VoiceNote(State):
         t = rtc.datetime
 
         # Components of the "time out" stamp
-        self.month_out = t.tm_mon
-        self.day_out = t.tm_mday
-        self.year_out = t.tm_year
+        self.State.month_out = t.tm_mon
+        self.State.day_out = t.tm_mday
+        self.State.year_out = t.tm_year
 
         # Components of the "time out" stamp
-        self.hour_out = t.tm_hour
-        self.min_out = t.tm_min
-        self.sec_out = t.tm_sec
-        print("Date out: " + str(self.month_out) + "/" + str(self.day_out) + "/" + str(self.year_out) + '\n')
-        print("Time out: " + str(self.hour_out) + ":" + str(self.min_out) + ":" + str(self.sec_out) + '\n')
+        self.State.hour_out = t.tm_hour
+        self.State.min_out = t.tm_min
+        self.State.sec_out = t.tm_sec
+        print("Date out: " + str(self.State.month_out) + "/" + str(self.State.day_out) + "/" + str(self.State.year_out) + '\n')
+        print("Time out: " + str(self.State.hour_out) + ":" + str(self.State.min_out) + ":" + str(self.State.sec_out) + '\n')
 
 
     def exit(self, machine):
         State.exit(self, machine)
+        # Display the time stamps upon exit
+        print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
+        print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
+        print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
+        print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
 
 
     def pressed(self, machine):
@@ -415,6 +418,7 @@ class Record(State):
 
     def __init__(self):
         super().__init__()
+        self.State = State()
 
 
     @property
@@ -427,6 +431,12 @@ class Record(State):
         print('Placeholder to display Prof. Levine on vacation Screen')                       # Easter egg
         print('Placeholder to display, "Placeholder for second semester functionality!"\n')
 
+        # Display the time stamps about to be recorded
+        print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
+        print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
+        print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
+        print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
+
     def exit(self, machine):
         State.exit(self, machine)
         print('Log date, start time stamp, end time stamp and voice note to .csv\n')    # Upon exit, log the global variables containing time stamps to the SD Card
@@ -435,15 +445,21 @@ class Record(State):
         # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
         with open("/sd/stamp.csv", "a") as f:
             led.value = True
-            t = rtc.datetime    #QUESTION: Do I need this in each class it is called?
+            #t = rtc.datetime    #QUESTION: Do I need this in each class it is called?
 
-            f.write("%d/%d/%d, " % (self.month_in, self.day_in, self.year_in))    # Common U.S. date format
-            f.write("%d:%02d:%02d, " % (self.hour_in, self.min_in, self.sec_in))  # "Time in" written to file
-            f.write("%d:%02d:%02d, " % (self.hour_out, self.min_out, self.sec_out))   #"Time-out" written to file
+            print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
+            f.write("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in))    # Common U.S. date format
 
-            delta_hour = self.hour_out - self.hour_in # Calculate hour difference
-            delta_min = self.min_out - self.min_in  # Calculate min difference
-            delta_sec = self.sec_out - self.sec_in # Calculate sec difference
+            print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
+            f.write("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in))  # "Time in" written to file
+
+            print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
+            f.write("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out))   #"Time-out" written to file
+
+            #Need correction for data types of 12 & 24 hours after some date is logging
+            delta_hour = self.State.hour_out - self.State.hour_in # Calculate hour difference
+            delta_min = self.State.min_out - self.State.min_in  # Calculate min difference
+            delta_sec = self.State.sec_out - self.State.sec_in # Calculate sec difference
             f.write("%d:%02d:%02d, " % (delta_hour, delta_min, delta_sec))  # Write the change in time to the file
             f.write("Speech to text voice note\r\n")
             #f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
@@ -486,3 +502,4 @@ while True:
     switch_1.update()               #Checks the switch 1 state each time the loop executes, necessary for button state changes
     switch_2.update()               #Checks the switch 1 state each time the loop executes, necessary for button state changes
     LTB_state_machine.pressed()     #Transitions to the StateMachine attrubute, "pressed". Doesn't do much there other than report the current state
+
