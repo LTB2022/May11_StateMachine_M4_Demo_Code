@@ -1,4 +1,4 @@
-# State Classes rev 1
+# State Classes rev 2
 # rev 1 contains code state machine, RTC and SD card wrtiting
 
 # pylint: disable=global-statement,stop-iteration-return,no-self-use,useless-super-delegation
@@ -107,17 +107,14 @@ print("Logging column names into the filesystem")
 """ global_month_in = month_in
 global_day_in = day_in
 global_year_in = year_in
-
 # "time in" stamp
 global_hour_in = hour_in
 global_min_in = min_in
 global_sec_in = sec_in
-
 # "date out" stamp
 global_month_out = month_out
 global_day_out = day_out
 global_year_out = year_out
-
 # "time out" stamp
 global_hour_out = hour_out
 global_min_out = min_out
@@ -143,21 +140,6 @@ class StateMachine(object):
     def __init__(self):                             # Needed constructor
         self.state = None
         self.states = {}
-        #Initialization of global variables which are inherited by child states in the following code
-        self.month_in = 0
-        self.day_in = 0
-        self.year_in = 0
-        self.hour_in = 0
-        self.min_in = 0
-        self.sec_in = 0
-
-        self.month_out = 0
-        self.day_out = 0
-        self.year_out = 0
-        self.hour_out = 0
-        self.min_out = 0
-        self.sec_out = 0
-
 
 
     def add_state(self, state):                     # "add state" attribute, adds states to the machine
@@ -176,7 +158,7 @@ class StateMachine(object):
             log('Updating %s' % (self.state.name))
             self.state.pressed(self)
             #print("'StateMachine' Class occurrence")  # Use this print statement to understand how the states transition here to update the state in the serial monitor
-            time.sleep(.5)                             # Critial pause needed to prevent the serial monitor from being "flooded" with data and crashing
+            time.sleep(.125)                             # Critial pause needed to prevent the serial monitor from being "flooded" with data and crashing
 
 
 
@@ -189,7 +171,20 @@ class StateMachine(object):
 class State(object):
 
     def __init__(self):         # Constructor. Sets variables for the class, in this instance only, "self". Note machine variable below in the "enter" attribute
-        pass
+        #Initialization of global variables which are inherited by child states in the following code
+        self.month_in = 0
+        self.day_in = 0
+        self.year_in = 0
+        self.hour_in = 0
+        self.min_in = 0
+        self.sec_in = 0
+
+        self.month_out = 0
+        self.day_out = 0
+        self.year_out = 0
+        self.hour_out = 0
+        self.min_out = 0
+        self.sec_out = 0
 
     @property
     def name(self):             # Attribute. Only the name is returned in states below. The State object shouldn't be called and returns nothing
@@ -451,7 +446,7 @@ class Record(State):
             delta_sec = self.sec_out - self.sec_in # Calculate sec difference
             f.write("%d:%02d:%02d, " % (delta_hour, delta_min, delta_sec))  # Write the change in time to the file
             f.write("Speech to text voice note\r\n")
-            f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
+            #f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
             led.value = False  # turn off LED to indicate we're done
 
         # Read out all lines in the .csv file to verify the last entry
