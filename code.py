@@ -1,4 +1,4 @@
-# State Classes rev 3
+# State Classes rev 4
 # rev 1 contains code state machine, RTC and SD card wrtiting
 
 # pylint: disable=global-statement,stop-iteration-return,no-self-use,useless-super-delegation
@@ -19,7 +19,7 @@ import storage
 ###############################################################################
 
 # Set to false to disable testing/tracing code
-TESTING = True
+TESTING = False
 
 ################################################################################
 # Setup hardware
@@ -54,10 +54,10 @@ if True:   # change to True if you want to write the time!
 # Note this code is in a loop and will continue to use this statement
     #                     year, mon, date, hour, min, sec, wday, yday, isdst
     #   t is a time object
-    t = time.struct_time((2022,  04,   07,   11,  22,  0,    0,   -1,    -1))
+    t = time.struct_time((2022,  04,   07,   18,  59,  0,    0,   -1,    -1))
 
     #print("Setting time to:", t)     # uncomment for debugging
-    rtc.datetime = t
+    rtc.datetime = t  
     #print()
 
 # Verifying the set time
@@ -93,7 +93,7 @@ storage.mount(vfs, "/sd")
 # Creates a file and writes name inside a text file along the path.
 with open("/sd/stamp.csv", "a") as f:
     f.write("Date, Time In, Time Out , Total, Voice Note\r\n")
-print("Logging column names into the filesystem")
+print("Logging column names into the filesystem\n")
 
 
 ################################################################################
@@ -129,7 +129,7 @@ class StateMachine(object):
 
     def go_to_state(self, state_name):              # "go to state" attribute, facilittes transition to other states. Prints confirmation when "Testing = True"
         if self.state:
-            log('Exiting %s' % (self.state.name))
+            log('Exiting %s\n' % (self.state.name))
             self.state.exit(self)
         self.state = self.states[state_name]
         log('Entering %s' % (self.state.name))
@@ -264,7 +264,7 @@ class Tracking1(State):
         print('Placeholder to display date and time')
         print('Placeholder to display counter for tracked time')
 
-        print('Store a time-stamp for a tracking start time (global variable)\n')
+        print('Store a time-stamp for a tracking START time (global variable)\n')
         # This code is in process to store a "time in" stamp
         t = rtc.datetime
 
@@ -277,24 +277,41 @@ class Tracking1(State):
         self.State.hour_in = t.tm_hour
         self.State.min_in = t.tm_min
         self.State.sec_in = t.tm_sec
+        
+        print('Logging start time to .csv\n')    # Upon exit, log the global variables containing time stamps to the SD Card
 
-        print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in) + '\n')
-        print('Time in: ' + str(self.State.hour_in) + ':' + str(self.State.min_in) + ':' + str(self.State.sec_in) + '\n')
+        # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
+        with open("/sd/stamp.csv", "a") as f:
+            led.value = True    # turn on LED to indicate writing entries
+            print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
+            f.write("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in))    # Common U.S. date format
 
-
+            print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
+            f.write("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in))  # "Time in" written to file
+            led.value = False  # turn off LED to indicate we're done
+            
+            # Read out all lines in the .csv file to verify the last entry
+            #with open("/sd/stamp.csv", "r") as f:
+            #print("Printing lines in file:")
+            #line = f.readline()
+            #while line != '':
+            #print(line)
+            #line = f.readline()
 
     def exit(self, machine):
         State.exit(self, machine)
         # Experiment clearing the Epaper Screen in this 'exit' attribute
 
         #Check that the variable values remain
-        print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in) + '\n')
+        print('Track the variable values on exit')
+        print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in))
         print('Time in: ' + str(self.State.hour_in) + ':' + str(self.State.min_in) + ':' + str(self.State.sec_in) + '\n')
 
     def pressed(self, machine):
-        if switch_1.fell:                                         #Insert a switch #2 case, pull high or low to disable
+        if switch_1.fell:                                       
             machine.go_to_state('Voice Note')
-            print('Placeholder to store a time-stamp for a tracking END time (global variable)\n')
+        if switch_2.fell:
+            machine.go_to_state('Voice Note')
 
 ########################################
 # The "Focus Timer 1" state. Begin the focus timer here
@@ -316,6 +333,7 @@ class FocusTimer1(State):
         print('Placeholder to display Focus Timer 1 Screen')
         print('Display Focus Timer counting down')
         print('Display date and time\n')
+        print('Placeholder to display "Ah Ah Ah" screen\n')
         # Display a screen for "Focus Timer 1" state, or enable a pin that displays the "Focus Timer 1" screen
 
     def exit(self, machine):
@@ -347,6 +365,7 @@ class Profile2(State):
         print('#### Profile 2 State ####')
         print('Placeholder to display Profile 2 Screen')
         print('Placeholder to display Profile 2 Screen, date and time\n')
+        print('Placeholder to display "Ah Ah Ah" screen\n')
 
     def exit(self, machine):
         State.exit(self, machine)
@@ -374,46 +393,69 @@ class VoiceNote(State):
 
     def enter(self, machine):
         State.enter(self, machine)
+                    
+        #Screen Placeholders
         print('#### Voice Note State ####')
         print('Placeholder to display Voice Note Screen')
         print('Placeholder to display, "Yes or No" to record a note\n')
-
-        print('Store a time-stamp to end tracking time (global variable)\n')
-        # This code is in process to store a "time out" stamp
+        
+        #Tracking1 has ended, store a time out stamp upon entry then display screens
+        print('Store a time-stamp for a tracking STOP time (global variable)\n')
+        # This code is in process to store a "time in" stamp
         t = rtc.datetime
 
-        # Components of the "time out" stamp
-        self.State.month_out = t.tm_mon
-        self.State.day_out = t.tm_mday
-        self.State.year_out = t.tm_year
+        # Components of the "time in" stamp
+        self.State.month_out = t.tm_mon     #Not currently used for the initial demo
+        self.State.day_out = t.tm_mday      #Not currently used for the initial demo
+        self.State.year_out = t.tm_year     #Not currently used for the initial demo
 
         # Components of the "time out" stamp
         self.State.hour_out = t.tm_hour
         self.State.min_out = t.tm_min
         self.State.sec_out = t.tm_sec
-        print("Date out: " + str(self.State.month_out) + "/" + str(self.State.day_out) + "/" + str(self.State.year_out) + '\n')
-        print("Time out: " + str(self.State.hour_out) + ":" + str(self.State.min_out) + ":" + str(self.State.sec_out) + '\n')
+        
+        print('Logging stop time to .csv filesystem\n')    # Upon exit, log the global variables containing time stamps to the SD Card
+
+        # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
+        with open("/sd/stamp.csv", "a") as f:
+            led.value = True    # turn on LED to indicate writing entries
+            #print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
+            #f.write("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out))    # Common U.S. date format
+
+            print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
+            f.write("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out))  # "Time in" written to file
+            led.value = False  # turn off LED to indicate we're done
+            
+            # Read out all lines in the .csv file to verify the last entry
+            #with open("/sd/stamp.csv", "r") as f:
+            #print("Printing lines in file:")
+            #line = f.readline()
+            #while line != '':
+            #print(line)
+            #line = f.readline()
+
 
 
     def exit(self, machine):
         State.exit(self, machine)
         # Display the time stamps upon exit
+        print('Track the variable values on exit')
         print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
         print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
         print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
         print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
-
+        print('Note: Some variables have been forgotten between states\n')
 
     def pressed(self, machine):
         if switch_1.fell:                   # Yes button results in a transition to the "Record" state
             machine.go_to_state('Record')
         if switch_2.fell:                   # No button results in a transition to the "Home" state
-            machine.go_to_state('Home')
+            machine.go_to_state('Home')   # APPEND AN EMPTY ENTRY INTO THE SPREADSHEET HERE, then go gine
     # Experiment clearing the screen before transitioning, perhaps load the next screen here? OR in "exit"
 
 ########################################
 # The "Record Note" state. A placeholder state that will record a note then transition to the "home" state
-# Constains an easter egg photo of Professor Levine on vacation
+# Constains an easter egg photo
 class Record(State):
 
     def __init__(self):
@@ -428,59 +470,53 @@ class Record(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Record Note State ####')
-        print('Placeholder to display Prof. Levine on vacation Screen')                       # Easter egg
+        print('Placeholder to display Easter Egg')                       # Easter egg
         print('Placeholder to display, "Placeholder for second semester functionality!"\n')
 
         # Display the time stamps about to be recorded
+        print('Track the variable values on entry')
         print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
         print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
         print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
         print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
+        print('Note: The variables have been forgotten between states\n')
 
     def exit(self, machine):
         State.exit(self, machine)
-        print('Log date, start time stamp, end time stamp and voice note to .csv\n')    # Upon exit, log the global variables containing time stamps to the SD Card
-        print("Logging timestamp into filesystem")
+        
+        print('Logging a voice note to .csv filesystem\n')    # Upon exit, log the global variables containing time stamps to the SD Card
 
         # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
         with open("/sd/stamp.csv", "a") as f:
-            led.value = True
-            #t = rtc.datetime    #QUESTION: Do I need this in each class it is called?
-
-            print("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in)) #Prints to serial monitor the data about to be written to the SD card
-            f.write("%d/%d/%d, " % (self.State.month_in, self.State.day_in, self.State.year_in))    # Common U.S. date format
-
-            print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
-            f.write("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in))  # "Time in" written to file
-
-            print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
-            f.write("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out))   #"Time-out" written to file
-
-            #Need correction for data types of 12 & 24 hours after some date is logging
-            delta_hour = self.State.hour_out - self.State.hour_in # Calculate hour difference
-            delta_min = self.State.min_out - self.State.min_in  # Calculate min difference
-            delta_sec = self.State.sec_out - self.State.sec_in # Calculate sec difference
-            f.write("%d:%02d:%02d, " % (delta_hour, delta_min, delta_sec))  # Write the change in time to the file
-            f.write("Speech to text voice note\r\n")
-            #f.write(None, None, None, "sum(d:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
+            led.value = True    # turn on LED to indicate writing entries
+            f.write("Delta Formula, Speech to text voice note\r\n")
+            #f.write(None, None, None, "sum(d2:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
             led.value = False  # turn off LED to indicate we're done
-
-        # Read out all lines in the .csv file to verify the last entry
-        #with open("/sd/stamp.csv", "r") as f:
+            
+            # Read out all lines in the .csv file to verify the last entry
+            #with open("/sd/stamp.csv", "r") as f:
             #print("Printing lines in file:")
             #line = f.readline()
             #while line != '':
             #print(line)
             #line = f.readline()
 
+
+            #Functionality below is time difference and Sum, which may be handled in the spreadsheet
+            #Need correction for data types of 12 & 24 hours after some date is logging
+            #delta_hour = self.State.hour_out - self.State.hour_in # Calculate hour difference
+            #delta_min = self.State.min_out - self.State.min_in  # Calculate min difference
+            #delta_sec = self.State.sec_out - self.State.sec_in # Calculate sec difference
+            #f.write("%d:%02d:%02d, " % (delta_hour, delta_min, delta_sec))  # Write the change in time to the file
+
+
     def pressed(self, machine):
 
         if switch_1.fell:
-            print('Placeholder to display "Ah Ah Ah" screen\n')                             # Easter egg
-            machine.go_to_state('Home')                                                     # Return "Home"
+            print('Put Easter Egg photo here?\n')                             
+            machine.go_to_state('Home') # Return "Home"
         if switch_2.fell:
-            print('Placeholder to display "Ah Ah Ah" screen\n')
-            machine.go_to_state('Home')                                                     # Return "Home"
+            machine.go_to_state('Home') # Return "Home"
 
 
 
