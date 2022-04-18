@@ -1,4 +1,4 @@
-# Base_StateMachine_RTC_SDcard
+# Base_StateMachine_RTC_SDcard_EpaperScreen
 An integration of the State Machine, Real-time Clock, SD card datalogging and outputs to enable epaper screens on the M4 express running Arduino code.
 
 This is Rev_5, which integrates all components to demonstrate a deployable prototype.
