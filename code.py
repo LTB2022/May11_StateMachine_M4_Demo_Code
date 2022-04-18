@@ -1,5 +1,6 @@
-# State Classes rev 4
-# rev 1 contains code state machine, RTC and SD card wrtiting
+# State Classes rev 5
+# rev 5 contains code state machine, RTC, SD card wrtiting
+# and output to the m4express that controls the epaper screen
 
 # pylint: disable=global-statement,stop-iteration-return,no-self-use,useless-super-delegation
 
@@ -24,14 +25,21 @@ TESTING = False
 ################################################################################
 # Setup hardware
 
-# Pins
+# Input Pins
 SWITCH_1_PIN = board.D5
 SWITCH_2_PIN = board.D6
 
-# Lights up LED for log on SD card:
-led = digitalio.DigitalInOut(board.LED)
-led.direction = digitalio.Direction.OUTPUT
+# Output Pins
+HOME_SCRN_OUT = board.D4
+PROFILE1_SCRN_OUT = board.D14
+TRACK1_SCRN_OUT = board.D15
+FOCUS1_SCRN_OUT = board.D16
+PROFILE2_SCRN_OUT = board.D17
+VOICENOTE_SCRN_OUT = board.D18
+RECORD_SCRN_OUT = board.D19
 
+
+# Initialization of inputs
 switch_1_io = digitalio.DigitalInOut(SWITCH_1_PIN)
 switch_1_io.direction = digitalio.Direction.INPUT
 switch_1_io.pull = digitalio.Pull.UP
@@ -41,6 +49,37 @@ switch_2_io = digitalio.DigitalInOut(SWITCH_2_PIN)
 switch_2_io.direction = digitalio.Direction.INPUT
 switch_2_io.pull = digitalio.Pull.UP
 switch_2 = Debouncer(switch_2_io)
+
+# Initialization of outputs
+
+# Lights up LED for log on SD card:
+led = digitalio.DigitalInOut(board.LED)
+led.direction = digitalio.Direction.OUTPUT
+
+home_scrn = digitalio.DigitalInOut(HOME_SCRN_OUT)
+home_scrn.direction = digitalio.Direction.OUTPUT
+
+profile1_scrn = digitalio.DigitalInOut(PROFILE1_SCRN_OUT)
+profile1_scrn.direction = digitalio.Direction.OUTPUT
+
+track1_scrn = digitalio.DigitalInOut(TRACK1_SCRN_OUT)
+track1_scrn.direction = digitalio.Direction.OUTPUT
+
+focus1_scrn = digitalio.DigitalInOut(FOCUS1_SCRN_OUT)
+focus1_scrn.direction = digitalio.Direction.OUTPUT
+
+profile2_scrn = digitalio.DigitalInOut(PROFILE2_SCRN_OUT)
+profile2_scrn.direction = digitalio.Direction.OUTPUT
+
+voicenote_scrn = digitalio.DigitalInOut(VOICENOTE_SCRN_OUT)
+voicenote_scrn.direction = digitalio.Direction.OUTPUT
+
+record_scrn = digitalio.DigitalInOut(RECORD_SCRN_OUT)
+record_scrn.direction = digitalio.Direction.OUTPUT
+
+
+
+
 
 #################################################################################################
 # Setting up the Real Time Clock and set the initial time
@@ -54,10 +93,10 @@ if True:   # change to True if you want to write the time!
 # Note this code is in a loop and will continue to use this statement
     #                     year, mon, date, hour, min, sec, wday, yday, isdst
     #   t is a time object
-    t = time.struct_time((2022,  04,   07,   18,  59,  0,    0,   -1,    -1))
+    t = time.struct_time((2022,  04,   11,   15,  35,  0,    0,   -1,    -1))
 
     #print("Setting time to:", t)     # uncomment for debugging
-    rtc.datetime = t  
+    rtc.datetime = t
     #print()
 
 # Verifying the set time
@@ -156,7 +195,7 @@ class State(object):
     def __init__(self):         # Constructor. Sets variables for the class, in this instance only, "self". Note machine variable below in the "enter" attribute
         # Variables for time stamps
         #Initialization of global variables which are inherited by child states in the following code
-        
+
         self.month_in = 0
         self.day_in = 0
         self.year_in = 0
@@ -201,11 +240,12 @@ class Home(State):
         State.enter(self, machine)
         # Display a screen for the "Home" State, or enable a pin that displays the "Home" screen
         print('#### Home State ####')
-        print('Placeholder to display the home screen on Epaper')
+        home_scrn.value = True    # output high signal to the epaper microcontroller
         print('Placeholder to display date and time\n')
 
     def exit(self, machine):
         State.exit(self, machine)
+        home_scrn.value = False    # output low signal to the epaper microcontroller
 
     def pressed(self, machine):
         if switch_1.fell:                                         #
@@ -230,12 +270,12 @@ class Profile1(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Profile 1 State ####')
-        print('Placeholder to display Profile 1 Screen')
+        profile1_scrn.value = True    # output high signal to the epaper microcontroller
         print('Placeholder to display date and time\n')
 
     def exit(self, machine):
         State.exit(self, machine)
-
+        profile1_scrn.value = False    # output low signal to the epaper microcontroller
 
     def pressed(self, machine):
         if switch_1.fell:
@@ -260,7 +300,7 @@ class Tracking1(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Tracking Task 1 State ####')
-        print('Placeholder to display Tracking Task 1 Screen')
+        track1_scrn.value = True    # output high signal to the epaper microcontroller
         print('Placeholder to display date and time')
         print('Placeholder to display counter for tracked time')
 
@@ -277,7 +317,7 @@ class Tracking1(State):
         self.State.hour_in = t.tm_hour
         self.State.min_in = t.tm_min
         self.State.sec_in = t.tm_sec
-        
+
         print('Logging start time to .csv\n')    # Upon exit, log the global variables containing time stamps to the SD Card
 
         # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
@@ -289,7 +329,7 @@ class Tracking1(State):
             print("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in)) #Prints to the serial monitor the data about to be written to the SD card
             f.write("%d:%02d:%02d, " % (self.State.hour_in, self.State.min_in, self.State.sec_in))  # "Time in" written to file
             led.value = False  # turn off LED to indicate we're done
-            
+
             # Read out all lines in the .csv file to verify the last entry
             #with open("/sd/stamp.csv", "r") as f:
             #print("Printing lines in file:")
@@ -306,9 +346,10 @@ class Tracking1(State):
         print('Track the variable values on exit')
         print('Date in: ' + str(self.State.month_in) + '/' + str(self.State.day_in) + '/' + str(self.State.year_in))
         print('Time in: ' + str(self.State.hour_in) + ':' + str(self.State.min_in) + ':' + str(self.State.sec_in) + '\n')
+        track1_scrn.value = False    # output low signal to the epaper microcontroller
 
     def pressed(self, machine):
-        if switch_1.fell:                                       
+        if switch_1.fell:
             machine.go_to_state('Voice Note')
         if switch_2.fell:
             machine.go_to_state('Voice Note')
@@ -330,7 +371,7 @@ class FocusTimer1(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Focus Timer 1 State ####')
-        print('Placeholder to display Focus Timer 1 Screen')
+        focus1_scrn_scrn.value = True    # output high signal to the epaper microcontroller
         print('Display Focus Timer counting down')
         print('Display date and time\n')
         print('Placeholder to display "Ah Ah Ah" screen\n')
@@ -338,6 +379,7 @@ class FocusTimer1(State):
 
     def exit(self, machine):
         State.exit(self, machine)
+        focus1_scrn.value = False    # output low signal to the epaper microcontroller
 
 
     def pressed(self, machine):
@@ -363,12 +405,13 @@ class Profile2(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Profile 2 State ####')
-        print('Placeholder to display Profile 2 Screen')
+        profile2_scrn.value = True    # output high signal to the epaper microcontroller
         print('Placeholder to display Profile 2 Screen, date and time\n')
         print('Placeholder to display "Ah Ah Ah" screen\n')
 
     def exit(self, machine):
         State.exit(self, machine)
+        profile2_scrn.value = False    # output low signal to the epaper microcontroller
 
 
     def pressed(self, machine):
@@ -393,12 +436,12 @@ class VoiceNote(State):
 
     def enter(self, machine):
         State.enter(self, machine)
-                    
+
         #Screen Placeholders
         print('#### Voice Note State ####')
-        print('Placeholder to display Voice Note Screen')
+        voicenote_scrn.value = True    # output high signal to the epaper microcontroller
         print('Placeholder to display, "Yes or No" to record a note\n')
-        
+
         #Tracking1 has ended, store a time out stamp upon entry then display screens
         print('Store a time-stamp for a tracking STOP time (global variable)\n')
         # This code is in process to store a "time in" stamp
@@ -413,7 +456,7 @@ class VoiceNote(State):
         self.State.hour_out = t.tm_hour
         self.State.min_out = t.tm_min
         self.State.sec_out = t.tm_sec
-        
+
         print('Logging stop time to .csv filesystem\n')    # Upon exit, log the global variables containing time stamps to the SD Card
 
         # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
@@ -425,7 +468,7 @@ class VoiceNote(State):
             print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
             f.write("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out))  # "Time in" written to file
             led.value = False  # turn off LED to indicate we're done
-            
+
             # Read out all lines in the .csv file to verify the last entry
             #with open("/sd/stamp.csv", "r") as f:
             #print("Printing lines in file:")
@@ -445,6 +488,7 @@ class VoiceNote(State):
         print("%d/%d/%d, " % (self.State.month_out, self.State.day_out, self.State.year_out)) #Prints to serial monitor the data about to be written to the SD card
         print("%d:%02d:%02d, " % (self.State.hour_out, self.State.min_out, self.State.sec_out)) #Prints to the serial monitor the data about to be written to the SD card
         print('Note: Some variables have been forgotten between states\n')
+        voicenote_scrn.value = False    # output low signal to the epaper microcontroller
 
     def pressed(self, machine):
         if switch_1.fell:                   # Yes button results in a transition to the "Record" state
@@ -470,7 +514,7 @@ class Record(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Record Note State ####')
-        print('Placeholder to display Easter Egg')                       # Easter egg
+        record_scrn.value = True    # output high signal to the epaper microcontroller #Easter egg
         print('Placeholder to display, "Placeholder for second semester functionality!"\n')
 
         # Display the time stamps about to be recorded
@@ -483,7 +527,8 @@ class Record(State):
 
     def exit(self, machine):
         State.exit(self, machine)
-        
+        record_scrn.value = False    # output low signal to the epaper microcontroller
+
         print('Logging a voice note to .csv filesystem\n')    # Upon exit, log the global variables containing time stamps to the SD Card
 
         # appending timestamp to file, Use "a" to append file, "w" will overwrite data in the file, "r" will read lines from the file.
@@ -492,7 +537,7 @@ class Record(State):
             f.write("Delta Formula, Speech to text voice note\r\n")
             #f.write(None, None, None, "sum(d2:d)\r\n",None)    #THERE IS PROBABLY AN ERROR HERE, In Excel you can't really sum items separated by ":"
             led.value = False  # turn off LED to indicate we're done
-            
+
             # Read out all lines in the .csv file to verify the last entry
             #with open("/sd/stamp.csv", "r") as f:
             #print("Printing lines in file:")
@@ -513,7 +558,7 @@ class Record(State):
     def pressed(self, machine):
 
         if switch_1.fell:
-            print('Put Easter Egg photo here?\n')                             
+            #print('Put Easter Egg photo here?\n')
             machine.go_to_state('Home') # Return "Home"
         if switch_2.fell:
             machine.go_to_state('Home') # Return "Home"
@@ -538,4 +583,3 @@ while True:
     switch_1.update()               #Checks the switch 1 state each time the loop executes, necessary for button state changes
     switch_2.update()               #Checks the switch 1 state each time the loop executes, necessary for button state changes
     LTB_state_machine.pressed()     #Transitions to the StateMachine attrubute, "pressed". Doesn't do much there other than report the current state
-
