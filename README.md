@@ -1,7 +1,11 @@
 # Base_StateMachine_RTC_SDcard
-An integration of the State Machine, Real-time Clock and SD card datalogging
+An integration of the State Machine, Real-time Clock, SD card datalogging and outputs to enable epaper screens on the M4 express running Arduino code.
 
-This is Rev_4, is a major change. Now each state writes its relevant data to the SD card.
+This is Rev_5, which integrates all components to demonstrate a deployable prototype.
 
-Remaining issue: Need to decide if Excel can handle the summing or the code will do this. Further research into global variables needed, read the
-notes on the the 'commit' for this revision of code.
+Remaining issues:
+
+1. The M4 express running the Arduino code continously refreshes the screen due to the high signal present at the input.
+we need to stop polling the pin after a signal is initially read as high. 
+
+2. This working machine needs to be transferred to a Raspberry Pi. 
