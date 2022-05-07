@@ -42,12 +42,12 @@ RECORD_SCRN_OUT = board.D19
 # Initialization of inputs
 switch_1_io = digitalio.DigitalInOut(SWITCH_1_PIN)
 switch_1_io.direction = digitalio.Direction.INPUT
-switch_1_io.pull = digitalio.Pull.UP
+switch_1_io.pull = digitalio.Pull.DOWN
 switch_1 = Debouncer(switch_1_io)
 
 switch_2_io = digitalio.DigitalInOut(SWITCH_2_PIN)
 switch_2_io.direction = digitalio.Direction.INPUT
-switch_2_io.pull = digitalio.Pull.UP
+switch_2_io.pull = digitalio.Pull.DOWN
 switch_2 = Debouncer(switch_2_io)
 
 # Initialization of outputs
@@ -93,7 +93,7 @@ if True:   # change to True if you want to write the time!
 # Note this code is in a loop and will continue to use this statement
     #                     year, mon, date, hour, min, sec, wday, yday, isdst
     #   t is a time object
-    t = time.struct_time((2022,  04,   11,   15,  35,  0,    0,   -1,    -1))
+    t = time.struct_time((2022,  05,   11,   12,  00,  0,    0,   -1,    -1))
 
     #print("Setting time to:", t)     # uncomment for debugging
     rtc.datetime = t
@@ -371,7 +371,7 @@ class FocusTimer1(State):
     def enter(self, machine):
         State.enter(self, machine)
         print('#### Focus Timer 1 State ####')
-        focus1_scrn_scrn.value = True    # output high signal to the epaper microcontroller
+        focus1_scrn.value = True    # output high signal to the epaper microcontroller
         print('Display Focus Timer counting down')
         print('Display date and time\n')
         print('Placeholder to display "Ah Ah Ah" screen\n')
